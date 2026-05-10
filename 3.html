@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Chi-Cuadrado · Independencia · Axel Jimenez</title>
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <!-- MathJax para LaTeX -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: radial-gradient(circle at 20% 30%, #f5f8fc, #eef2f7);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .premium-card {
+            max-width: 1280px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 48px;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.2), 0 0 0 0.5px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+        .premium-card:hover {
+            box-shadow: 0 35px 55px -18px rgba(0, 0, 0, 0.25);
+        }
+        .card-header {
+            padding: 2rem 2.5rem 1rem 2.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .title-section h1 {
+            font-size: 1.9rem;
+            font-weight: 590;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #1f3b4c, #1a5f7a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.3rem;
+        }
+        .subhead {
+            font-size: 1rem;
+            color: #5d6e82;
+            font-weight: 440;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #eef3fc;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            color: #2a6285;
+            margin-top: 0.8rem;
+            font-weight: 470;
+        }
+        .chart-wrapper {
+            padding: 1rem 1.8rem 0rem 1.8rem;
+        }
+        .chart-container {
+            width: 100%;
+            height: 460px;
+            background: #ffffff;
+            border-radius: 36px;
+        }
+        .insight-panel {
+            padding: 0.2rem 2.5rem 2rem 2.5rem;
+        }
+        .explanation {
+            background: #f9fbfe;
+            border-radius: 28px;
+            padding: 1.4rem 2rem;
+            border: 0.5px solid rgba(0, 0, 0, 0.03);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+        .explanation p {
+            line-height: 1.5;
+            color: #1e2f3c;
+            font-size: 0.95rem;
+            margin-bottom: 0.7rem;
+        }
+        .explanation strong {
+            font-weight: 590;
+            color: #1c5f7e;
+        }
+        .formula-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 0.6rem 1rem;
+            margin: 0.9rem 0;
+            border-left: 3px solid #2c7da0;
+            font-family: 'SF Mono', Menlo, monospace;
+            font-size: 0.9rem;
+        }
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+        .btn-premium {
+            background: #1d5a7c;
+            border: none;
+            padding: 0.7rem 1.8rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 520;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-premium:hover {
+            background: #0e4562;
+            transform: scale(0.98);
+        }
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #8d9aaf;
+            padding: 1rem 2rem 1.6rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            background: #ffffffd4;
+        }
+        i.fa {
+            color: #1f6e93;
+        }
+        @media (max-width: 700px) {
+            body { padding: 1rem; }
+            .card-header { padding: 1.2rem 1.5rem; }
+            .chart-wrapper { padding: 0.5rem 1rem; }
+            .insight-panel { padding: 0.2rem 1.5rem 1.5rem; }
+            .chart-container { height: 340px; }
+        }
+    </style>
+</head>
+<body>
+<div class="premium-card">
+    <div class="card-header">
+        <div class="title-section">
+            <h1>Prueba Chi-Cuadrado de independencia</h1>
+            <div class="subhead">
+                Preferencia por panes dulces vs género<br>
+                \( H_0: \) independencia &nbsp; versus &nbsp; \( H_1: \) existe asociación
+            </div>
+            <div class="badge">
+                <i class="fas fa-user-check"></i> Axel Jimenez, 27870662
+                <i class="fas fa-chart-pie" style="margin-left: 8px;"></i> Nivel de significación \( \alpha = 0.05 \) · gl = 1
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-wrapper">
+        <div id="chiSquareChart" class="chart-container"></div>
+    </div>
+
+    <div class="insight-panel">
+        <div class="explanation">
+            <p><i class="fas fa-calculator"></i> <strong>Estadístico Chi-Cuadrado</strong><br>
+            A partir de la tabla de contingencia se calcularon las frecuencias esperadas bajo \(H_0\) y se obtuvo:</p>
+            <div class="formula-card">
+                \[
+                \chi^2 = \sum \frac{(O-E)^2}{E} = 2.901
+                \]
+                Grados de libertad: \( (2-1)\times(2-1) = 1 \).  
+                Valor crítico para \( \alpha = 0.05 \): \( \chi^2_{0.05,1} = 3.841 \).
+            </div>
+            <p>La gráfica muestra la función de densidad de la distribución \( \chi^2 \) con 1 grado de libertad.  
+            El área sombreada en rojo corresponde a la región de rechazo (5% superior), a partir del valor crítico \(3.841\).  
+            El estadístico calculado (\(2.901\)) se ubica a la izquierda de la línea crítica, por lo que <strong>no se rechaza \(H_0\)</strong>.  
+            Conclusión: No hay evidencia suficiente para afirmar que la preferencia por panes dulces esté relacionada con el género; las variables son independientes.</p>
+            <p style="font-size:0.85rem; color:#4d6a82; margin-top:0.5rem;"><i class="fas fa-info-circle"></i> La región crítica está definida para una prueba unilateral derecha (como es estándar en Chi-Cuadrado).</p>
+        </div>
+        <div class="button-group">
+            <button id="exportChartBtn" class="btn-premium">
+                <i class="fas fa-download"></i> Exportar gráfico (PNG)
+            </button>
+        </div>
+    </div>
+    <footer>
+        Distribución \(\chi^2\) con 1 grado de libertad · Región de rechazo: \(\chi^2 \ge 3.841\) · \(\alpha = 0.05\)
+    </footer>
+</div>
+
+<script>
+    (function() {
+        // Parámetros
+        const df = 1; // grados de libertad
+        const VALOR_CRITICO = 3.841;   // χ²₀.₀₅,₁
+        const ESTADISTICO = 2.901;     // χ² calculado
+        
+        // Función de densidad de chi-cuadrado
+        function pdfChi2(x, k) {
+            if (x <= 0) return 0;
+            // (1/(2^(k/2) * Γ(k/2))) * x^(k/2 -1) * e^(-x/2)
+            const gammaHalf = (k / 2);
+            let gammaVal;
+            if (Math.abs(gammaHalf - 0.5) < 1e-6) {
+                gammaVal = Math.sqrt(Math.PI);
+            } else if (Math.abs(gammaHalf - 1) < 1e-6) {
+                gammaVal = 1;
+            } else {
+                // Aprox para k=1: Γ(0.5)=√π  ; k=2: Γ(1)=1 ; usamos valores conocidos
+                gammaVal = (k === 1) ? Math.sqrt(Math.PI) : (k === 2) ? 1 : Math.exp(0); 
+            }
+            const coef = 1 / (Math.pow(2, k/2) * gammaVal);
+            return coef * Math.pow(x, k/2 - 1) * Math.exp(-x / 2);
+        }
+        
+        // Rango de visualización desde 0 hasta 12
+        const start = 0;
+        const end = 12;
+        const step = 0.05;
+        
+        const fullCurve = [];
+        const rejectionArea = [];
+        
+        for (let x = start; x <= end + 1e-8; x += step) {
+            let y = pdfChi2(x, df);
+            fullCurve.push([parseFloat(x.toFixed(4)), y]);
+            if (x >= VALOR_CRITICO) {
+                rejectionArea.push([parseFloat(x.toFixed(4)), y]);
+            }
+        }
+        
+        // Asegurar punto exacto en el valor crítico para unir bien el área
+        const yCrit = pdfChi2(VALOR_CRITICO, df);
+        if (!rejectionArea.some(p => Math.abs(p[0] - VALOR_CRITICO) < 0.02)) {
+            rejectionArea.unshift([VALOR_CRITICO, yCrit]);
+        }
+        
+        // Línea vertical punteada en el valor crítico
+        const critLine = [[VALOR_CRITICO, 0], [VALOR_CRITICO, yCrit]];
+        
+        const dom = document.getElementById('chiSquareChart');
+        const myChart = echarts.init(dom);
+        
+        const option = {
+            backgroundColor: '#ffffff',
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: function(params) {
+                    if (!params || params.length === 0) return '';
+                    const point = params[0];
+                    const xv = point.value[0];
+                    const yv = point.value[1];
+                    return `<strong>χ² = ${xv.toFixed(3)}</strong><br/>Densidad: ${yv.toFixed(4)}`;
+                }
+            },
+            grid: {
+                left: '7%',
+                right: '6%',
+                top: '12%',
+                bottom: '8%',
+                containLabel: false
+            },
+            xAxis: {
+                name: 'χ²',
+                nameLocation: 'middle',
+                nameGap: 35,
+                axisLine: { lineStyle: { color: '#b3c7db' } },
+                axisTick: { show: false },
+                axisLabel: { fontSize: 11, color: '#3e5e7c' }
+            },
+            yAxis: {
+                name: 'Densidad de probabilidad',
+                nameLocation: 'middle',
+                nameGap: 48,
+                axisLine: { show: false },
+                splitLine: { lineStyle: { type: 'dashed', color: '#e2e9f2' } }
+            },
+            series: [
+                {
+                    name: 'Distribución χ² (gl=1)',
+                    type: 'line',
+                    data: fullCurve,
+                    lineStyle: { width: 2.3, color: '#1f6e93' },
+                    symbol: 'none',
+                    areaStyle: { opacity: 0 }
+                },
+                {
+                    name: 'Región de rechazo (α=0.05)',
+                    type: 'line',
+                    data: rejectionArea,
+                    lineStyle: { width: 0 },
+                    symbol: 'none',
+                    areaStyle: { color: '#e3624a', opacity: 0.55 },
+                    step: false
+                },
+                {
+                    name: 'Valor crítico 3.841',
+                    type: 'line',
+                    data: critLine,
+                    lineStyle: { width: 1.5, color: '#bc6b50', type: 'dashed' },
+                    symbol: 'none'
+                },
+                {
+                    name: 'Estadístico χ² calculado',
+                    type: 'scatter',
+                    data: [[ESTADISTICO, pdfChi2(ESTADISTICO, df)]],
+                    symbol: 'circle',
+                    symbolSize: 10,
+                    itemStyle: { color: '#1c6d9e', borderColor: '#ffffff', borderWidth: 2 },
+                    label: {
+                        show: true,
+                        formatter: `χ² = ${ESTADISTICO.toFixed(3)}`,
+                        position: 'top',
+                        fontWeight: 500,
+                        color: '#1d5f80',
+                        fontSize: 11
+                    }
+                }
+            ],
+            legend: {
+                data: ['χ² con 1 gl', 'Región de rechazo (α=0.05)', 'Límite crítico 3.841', 'χ² observado'],
+                left: 'left',
+                top: 10,
+                itemWidth: 24,
+                itemHeight: 12,
+                textStyle: { color: '#326883', fontSize: 11 }
+            },
+            graphic: [
+                {
+                    type: 'text',
+                    left: '35%',
+                    top: '72%',
+                    style: { text: '3.841', fill: '#bc5c3c', fontSize: 12, fontWeight: 500 }
+                }
+            ]
+        };
+        
+        myChart.setOption(option);
+        
+        // Exportar imagen
+        document.getElementById('exportChartBtn').addEventListener('click', () => {
+            const url = myChart.getDataURL({ type: 'png', pixelRatio: 2.5, backgroundColor: '#ffffff' });
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'chi2_independencia_Axel_Jimenez.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        
+        window.addEventListener('resize', () => myChart.resize());
+    })();
+</script>
+</body>
+</html>
